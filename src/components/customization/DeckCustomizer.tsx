@@ -1040,6 +1040,57 @@ export function DeckCustomizer({ advancedOpen = false, onAdvancedClose, onToast 
                   );
                 })()}
               </div>
+
+              {/* Exclude cards from saved decks */}
+              {customization.collectionMode && (
+                <div className="mt-3 pt-3 border-t border-border/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold">Exclude from Saved Decks</span>
+                    <InfoTooltip text="Cards in checked decks will be unavailable for this build, even if you own them." />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mb-2">Cards in checked decks won't be used from your collection.</p>
+                  {allUserLists.filter(l => l.type === 'deck' && l.cards.length > 0).length === 0 ? (
+                    <p className="text-[10px] text-muted-foreground">No saved decks yet.</p>
+                  ) : (
+                    <>
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {allUserLists.filter(l => l.type === 'deck' && l.cards.length > 0).map(deck => (
+                          <label key={deck.id} className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 rounded px-1 py-0.5">
+                            <input
+                              type="checkbox"
+                              checked={customization.excludedDeckIds.includes(deck.id)}
+                              onChange={e => {
+                                const next = e.target.checked
+                                  ? [...customization.excludedDeckIds, deck.id]
+                                  : customization.excludedDeckIds.filter(id => id !== deck.id);
+                                updateCustomization({ excludedDeckIds: next });
+                              }}
+                              className="rounded border-border accent-primary w-3.5 h-3.5"
+                            />
+                            <span className="text-xs">{deck.name}</span>
+                            <span className="text-[10px] text-muted-foreground">({deck.cards.length})</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => updateCustomization({ excludedDeckIds: allUserLists.filter(l => l.type === 'deck').map(d => d.id) })}
+                          className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          Check all
+                        </button>
+                        <span className="text-[10px] text-border">|</span>
+                        <button
+                          onClick={() => updateCustomization({ excludedDeckIds: [] })}
+                          className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          Clear all
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             </div>
           </div>

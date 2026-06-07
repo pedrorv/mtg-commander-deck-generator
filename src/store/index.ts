@@ -10,6 +10,7 @@ const BAN_LISTS_KEY = 'mtg-deck-builder-ban-lists';
 const APPLIED_EXCLUDE_LISTS_KEY = 'mtg-deck-builder-applied-exclude-lists';
 const APPLIED_INCLUDE_LISTS_KEY = 'mtg-deck-builder-applied-include-lists';
 const ARENA_ONLY_KEY = 'mtg-deck-builder-arena-only';
+const EXCLUDED_DECK_IDS_KEY = 'mtg-deck-builder-excluded-deck-ids';
 
 // Load banned cards from localStorage
 function loadBannedCards(): string[] {
@@ -170,6 +171,29 @@ function saveArenaOnly(value: boolean): void {
   }
 }
 
+// Load excluded deck IDs from localStorage
+function loadExcludedDeckIds(): string[] {
+  try {
+    const stored = localStorage.getItem(EXCLUDED_DECK_IDS_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    console.warn('Failed to load excluded deck IDs from localStorage:', e);
+  }
+  return [];
+}
+
+// Save excluded deck IDs to localStorage
+function saveExcludedDeckIds(ids: string[]): void {
+  try {
+    localStorage.setItem(EXCLUDED_DECK_IDS_KEY, JSON.stringify(ids));
+  } catch (e) {
+    console.warn('Failed to save excluded deck IDs to localStorage:', e);
+  }
+}
+
 const defaultCustomization: Customization = {
   deckFormat: 99,
   landCount: 37,
@@ -192,6 +216,7 @@ const defaultCustomization: Customization = {
   collectionStrategy: 'full' as const,
   collectionOwnedPercent: 75,
   arenaOnly: loadArenaOnly(),
+  excludedDeckIds: loadExcludedDeckIds(),
   scryfallQuery: '',
   comboCount: 1,
   hyperFocus: false,
@@ -348,6 +373,11 @@ export const useStore = create<AppState>((set, get) => ({
     // Persist arena-only setting to localStorage when it changes
     if (updates.arenaOnly !== undefined) {
       saveArenaOnly(newCustomization.arenaOnly);
+    }
+
+    // Persist excluded deck IDs to localStorage when they change
+    if (updates.excludedDeckIds !== undefined) {
+      saveExcludedDeckIds(newCustomization.excludedDeckIds);
     }
 
     return { customization: newCustomization };

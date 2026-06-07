@@ -465,17 +465,10 @@ export interface UserCardList {
   generationSummary?: string; // "Built with: X · Bracket 3 · Budget" — cleared on first edit
   createdAt: number;
   updatedAt: number;
-  pinnedAt?: number; // Timestamp when user pinned this list to the top; undefined = not pinned
   // Cached display data (computed on save to avoid Scryfall fetches on browse)
   cachedTypeBreakdown?: Record<string, number>;
   cachedColorIdentity?: string[];
   cachedCommanderArtUrl?: string;
-  /** User-selected card name from list.cards to use as the backdrop art on
-   *  the overview card. When unset, falls back to the first card with art. */
-  heroCardName?: string;
-  /** Resolved art_crop URL derived in computeCachedFields. Only populated for
-   *  non-commander lists (commander decks render cachedCommanderArtUrl). */
-  cachedListArtUrl?: string;
 }
 
 // Reference to a user list applied as exclude or include
@@ -531,6 +524,7 @@ export interface Customization {
   balancedRoles: boolean; // When true, boost cards that fill underrepresented functional roles (ramp, removal, etc.)
   ignoreOwnedBudget: boolean; // When true, owned cards don't count against budget limits
   ignoreOwnedRarity: boolean; // When true, owned cards skip max-rarity restriction
+  excludedDeckIds: string[]; // Deck IDs whose cards are depleted from collection pool
   currency: 'USD' | 'EUR'; // Price currency for budget filtering and display
   appliedExcludeLists: AppliedList[]; // User lists toggled on as exclude lists
   appliedIncludeLists: AppliedList[]; // User lists toggled on as must-include lists

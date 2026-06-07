@@ -570,12 +570,35 @@ export function BuilderPage() {
       // Load collection if collection mode is enabled
       let collectionNames: Set<string> | undefined;
       if (cust.collectionMode) {
-        const { getCollectionNameSet } = await import('@/services/collection/db');
+        const { getCollectionNameSet, getAllCards } = await import('@/services/collection/db');
+        const { getUserListCards } = await import('@/hooks/useUserLists');
+
         collectionNames = await getCollectionNameSet();
         if (collectionNames.size === 0) {
           setError('Collection mode is enabled but your collection is empty. Import your collection first.');
           setLoading(false);
           return;
+        }
+
+        // Deplete cards from excluded decks
+        if (cust.excludedDeckIds.length > 0) {
+          const allCards = await getAllCards();
+          const quantityMap = new Map<string, number>();
+          for (const card of allCards) {
+            quantityMap.set(card.name, card.quantity);
+          }
+          for (const deckId of cust.excludedDeckIds) {
+            const deckCards = getUserListCards(deckId);
+            for (const cardName of deckCards) {
+              const current = quantityMap.get(cardName) ?? 0;
+              quantityMap.set(cardName, Math.max(0, current - 1));
+            }
+          }
+          collectionNames = new Set(
+            [...quantityMap.entries()]
+              .filter(([, qty]) => qty > 0)
+              .map(([name]) => name)
+          );
         }
       }
 
@@ -1220,7 +1243,7 @@ export function BuilderPage() {
           <button
             onClick={() => {
               setSavedToList(false);
-              navigate(savedListId ? `/decks/${savedListId}` : '/decks');
+              navigate(savedListId ? `/lists/${savedListId}/deck-view` : '/lists');
             }}
             className="underline underline-offset-2 hover:text-white/80 transition-colors font-medium"
           >
