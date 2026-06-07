@@ -84,11 +84,13 @@ export function CommanderSearch() {
 
   // Local search results when ownedOnly is on
   const localResults = useMemo(() => {
-    if (!ownedOnly || !query.trim()) return [];
-    const q = query.toLowerCase();
-    return collectionLegends
+    if (!ownedOnly) return [];
+    const q = query.trim().toLowerCase();
+    const sorted = [...collectionLegends].sort((a, b) => a.name.localeCompare(b.name));
+    if (!q) return sorted.slice(0, 50);
+    return sorted
       .filter(c => c.name.toLowerCase().includes(q))
-      .slice(0, 10);
+      .slice(0, 50);
   }, [ownedOnly, query, collectionLegends]);
 
   // Suggestion tab: 'edhrec' or 'popular'
@@ -242,7 +244,7 @@ export function CommanderSearch() {
   };
 
   const showDropdown = ownedOnly
-    ? showResults && query.trim().length > 0 && localResults.length > 0
+    ? showResults && localResults.length > 0
     : showResults && results.length > 0;
 
   return (
@@ -363,8 +365,8 @@ export function CommanderSearch() {
         />
       )}
 
-      {/* Suggestions Section */}
-      {!query && (
+      {/* Suggestions Section — only show when dropdown is closed */}
+      {!query && !showDropdown && (
         <div className="text-center mt-8 animate-fade-in">
           {ownedOnly ? (
             // Show random legends from collection
