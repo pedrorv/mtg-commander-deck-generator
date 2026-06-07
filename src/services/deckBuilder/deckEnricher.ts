@@ -57,6 +57,7 @@ export interface TaggerStampResult {
 export async function stampTaggerAndGameChangers(
   cards: ScryfallCard[],
   detectedCombos?: DetectedCombo[],
+  storedGameChangerNames?: string[],
 ): Promise<TaggerStampResult> {
   await loadTaggerData();
 
@@ -78,6 +79,9 @@ export async function stampTaggerAndGameChangers(
   let nonLandCount = 0;
   let gcSet: Set<string> | null = null;
   try { gcSet = await getGameChangerNames(); } catch { /* non-critical */ }
+  if ((!gcSet || gcSet.size === 0) && storedGameChangerNames && storedGameChangerNames.length > 0) {
+    gcSet = new Set(storedGameChangerNames);
+  }
 
   for (const card of cards) {
     const typeLine = getFrontFaceTypeLine(card).toLowerCase();
@@ -319,27 +323,6 @@ export async function buildEdhrecMaps(
       console.warn('[Enricher] Gap analysis build failed:', e);
     }
 
-    // Index gap analysis cards into the relevancy map so consumers (fill drawer,
-    // gap UI) can read a relevancy score, not just raw EDHREC inclusion/synergy.
-    // Mirrors the equivalent block in deckGenerator.ts.
-    if (gapAnalysis) {
-      for (const g of gapAnalysis) {
-        if (relMap[g.name] !== undefined) continue;
-        const pseudoEc: EDHRECCard = {
-          name: g.name,
-          sanitized: g.name,
-          primary_type: g.typeLine.split(' ').find(t =>
-            ['Creature', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Planeswalker', 'Land'].includes(t)) || 'Unknown',
-          inclusion: g.inclusion,
-          num_decks: 0,
-          synergy: g.synergy,
-          cmc: g.cmc,
-        };
-        const role = (g.role as RoleKey) || null;
-        relMap[g.name] = Math.round(scoreRecommendation(pseudoEc, role, null, scoringCtx));
-      }
-    }
-
     return {
       roleTargets,
       cardInclusionMap: inclMap,
@@ -449,8 +432,9 @@ export async function enrichDeckCards(
   detectedCombos?: DetectedCombo[],
   commanderName?: string,
   partnerCommanderName?: string,
+  storedGameChangerNames?: string[],
 ): Promise<EnrichResult> {
-  const tagger = await stampTaggerAndGameChangers(cards, detectedCombos);
+  const tagger = await stampTaggerAndGameChangers(cards, detectedCombos, storedGameChangerNames);
 
   let edhrec: EdhrecMapsResult = { roleTargets: getBaseRoleTargets(deckSize) };
   let swaps: SwapCandidatesResult = {};

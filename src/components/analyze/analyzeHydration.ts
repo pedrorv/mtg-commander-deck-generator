@@ -64,6 +64,7 @@ export interface HydrateDeckInput {
   partnerCommanderName?: string;
   deckSize?: number;
   onProgress?: (stage: HydrateStage) => void;
+  gameChangerNames?: string[];
 }
 
 export interface HydrateDeckResult {
@@ -192,6 +193,7 @@ export async function hydrateDeckForAnalysis(input: HydrateDeckInput): Promise<H
     detectedCombos,
     commanderCard?.name,
     partnerCard?.name,
+    input.gameChangerNames,
   );
 
   const deck: GeneratedDeck = {
